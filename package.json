@@ -1,0 +1,13 @@
+{
+  "name": "sf-heights",
+  "version": "1.0.0",
+  "description": "Interactive map of San francisco with existing building heights compared to permissible heights from SF Planning data",
+  "author": "Asheem Mamoowala",
+  "license": "ISC",
+  "scripts": {
+    "start": "lite-server"
+  },
+  "dependencies": {
+    "lite-server": "^2.3.0"
+  }
+}
