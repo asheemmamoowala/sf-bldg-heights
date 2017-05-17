@@ -1,3 +1,4 @@
+<html>
 <script src='https://api.mapbox.com/mapbox-gl-js/v0.35.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v0.35.1/mapbox-gl.css' rel='stylesheet' />
 <style>
@@ -15,6 +16,10 @@
         cursor: crosshair;
     }
 </style>
+<head>
+    <title>San Francisco Allowed Bulk Heights </title>
+</head>
+<body>
 <div id='map' style='width: 100%; height: 100%;'></div>
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYXNoZWVtbSIsImEiOiJjajF0c3l1YWMwMDFlMzJsaG12amc0dXF3In0.L2SrgjgzM_1DoZIvTmhuUQ';
@@ -45,7 +50,7 @@
             'source': 'sfheight',
             'source-layer': 'sfheights-03zip0',
             'type': 'fill',
-            'minzoom': 13,
+            'minzoom': 16,
             'paint': {
                 'fill-color': '#7eddfc',
                 // 'fill-extrusion-height': {
@@ -53,7 +58,7 @@
                 //     'property': 'height'
                 // },
                 // 'fill-extrusion-base': 0,
-                'fill-opacity': .35
+                'fill-opacity': .15
             }
 
         });
@@ -63,7 +68,7 @@
             'source-layer': 'building',
             'filter': ['==', 'extrude', 'true'],
             'type': 'fill-extrusion',
-            'minzoom': 15,
+            'minzoom': 16,
             'paint': {
                 'fill-extrusion-color': '#aaa',
                 'fill-extrusion-height': {
@@ -74,16 +79,26 @@
                     'type': 'identity',
                     'property': 'min_height'
                 },
-                'fill-extrusion-opacity': .45
+                'fill-extrusion-opacity': .75
             }
         });
         map.addLayer({
             'id': 'allowed-height',
             'source': 'allowedHeight',
             'type': 'fill-extrusion',
-            'minzoom': 16,
+            'minzoom': 13,
             'paint': {
-                'fill-extrusion-color': '#58d1ab',
+                'fill-extrusion-color': {
+                    "property": "height_delta",
+                    "stops": [
+                        [0, "green"],
+                        [3, "lightgreen"],
+                        [10, "#faea48"],
+                        [20, "#efaa18"],
+                        [30, "#ef6118"],
+                        [40, "#961700"]
+                    ]
+                },
                 'fill-extrusion-height': {
                     'type': 'identity',
                     'property': 'height'
@@ -95,9 +110,12 @@
                 'fill-extrusion-opacity': .25
             }
         });
+        updateSource = debounce(function() {
+                    map.getSource('allowedHeight').setData(allowedHeightData);
+        }, 100);
 
         map.on('mousemove', '3d-buildings', function (e) {
-            if (!e.features || map.getZoom() < 16.5)
+            if (!e.features || map.getZoom() < 16)
                 return;
             const highlightedFeature = e.features[0];
             // Only care about buildings with extrude/height data
@@ -108,12 +126,29 @@
                 return;
             const actualHeight = highlightedFeature.properties.height;
             const allowedHeight = bulkHeightZones[0].properties.height;
-            if (allowedHeight - actualHeight > 3) { //tolerance for buildings close to allowed height
+            if (allowedHeight - actualHeight > 3) {
+                highlightedFeature.properties.min_height = actualHeight;
                 highlightedFeature.properties.height = allowedHeight;
+                highlightedFeature.properties.height_delta = allowedHeight - actualHeight; 
                 allowedHeightData.features.push(highlightedFeature)
-                map.getSource('allowedHeight').setData(allowedHeightData);
+                updateSource();
             }
         });
     });
-
+    function debounce(func, wait, immediate) {
+        var timeout;
+        return function() {
+            var context = this, args = arguments;
+            var later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        };
+    };
 </script>
+</body>
+</html>
