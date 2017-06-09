@@ -8,6 +8,8 @@
     "start": "lite-server"
   },
   "dependencies": {
-    "lite-server": "^2.3.0"
+    "lite-server": "^2.3.0",
+    "soda-js": "^0.2.3",
+    "wellknown": "^0.5.0"
   }
 }
